@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -219,7 +219,7 @@ namespace Billing_Module
             {
 
                 kinderval = 0;
-                gradeschoolval = 0;
+                gradeschoolval = cash_in - cash_out;
                 highschoolval = 0;
                 seniorhsval = 0;
                 nighthsval = 0;
@@ -229,7 +229,7 @@ namespace Billing_Module
             {
                 kinderval = 0;
                 gradeschoolval = 0;
-                highschoolval = 0;
+                highschoolval = cash_in - cash_out;
                 seniorhsval = 0;
                 nighthsval = 0;
                 othersval = 0;
@@ -239,7 +239,7 @@ namespace Billing_Module
                 kinderval = 0;
                 gradeschoolval = 0;
                 highschoolval = 0;
-                seniorhsval = 0;
+                seniorhsval = cash_in - cash_out;
                 nighthsval = 0;
                 othersval = 0;
             }
