@@ -36,7 +36,7 @@ namespace Billing_Module
             try
             {
                 myCmd.Parameters.Add("@Pidnumber", MySqlDbType.VarChar, 9).Value = idnumber.Text;
-                myCmd.Parameters.Add("@Ptransaction", MySqlDbType.VarChar, 45).Value = account.ToString();
+                myCmd.Parameters.Add("@Ptransaction", MySqlDbType.VarChar, 45).Value = acc_desc.ToString();
                 myCmd.Parameters.Add("@Pamountin", MySqlDbType.Decimal).Value = cash_in;
                 myCmd.Parameters.Add("@Pamountout", MySqlDbType.Decimal).Value = cash_out;
                 myCmd.Parameters.Add("@Pcrno", MySqlDbType.Decimal).Value = cr_no.Text;
@@ -92,6 +92,112 @@ namespace Billing_Module
             f2.Show();
 
             //cleartxtboxes();
+        }
+
+        private void searchbox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+                searchname();
+                dataGridView1.Select();
+            }
+        }
+
+        void searchname()
+        {
+
+            MySqlConnection myConn = new MySqlConnection(constring);
+            myConn.Open();
+            MySqlCommand myCmd = new MySqlCommand("procshowstudent3", myConn);
+            try
+            {
+                myCmd.Parameters.Add("@Psearchentry", MySqlDbType.VarChar, 100).Value = searchbox.Text.ToString();
+                myCmd.CommandType = CommandType.StoredProcedure;
+                myCmd.ExecuteNonQuery();
+                MySqlDataAdapter da = new MySqlDataAdapter(myCmd);
+                da.SelectCommand = myCmd;
+                DataTable dbdatasheet = new DataTable();
+                da.Fill(dbdatasheet);
+                BindingSource bSource = new BindingSource();
+
+                bSource.DataSource = dbdatasheet;
+                dataGridView1.DataSource = bSource;
+                da.Update(dbdatasheet);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
+            finally
+            {
+                myConn.Dispose();
+            }
+            searchbox.Focus();
+        }
+
+        private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0)
+            {
+                DataGridViewRow row = this.dataGridView1.Rows[e.RowIndex];
+                idnumber.Text = row.Cells["Id number"].Value.ToString();
+                name.Text = row.Cells["Last Name"].Value.ToString() + ", " + row.Cells["First Name"].Value.ToString() + " " + row.Cells["Middle Name"].Value.ToString();
+                yearlvl.Text = row.Cells["Year Level"].Value.ToString();
+            }
+            returnvalues();
+        }
+
+        void returnvalues()
+        {
+            MySqlConnection myConn = new MySqlConnection(constring);
+            MySqlCommand myCmd = new MySqlCommand("procshowbalances_oth", myConn);
+            myCmd.Parameters.AddWithValue("@Pyearlvl", yearlvl.Text.ToString());
+            myCmd.CommandType = CommandType.StoredProcedure;
+
+            try
+            {
+                myConn.Open();
+                using (MySqlDataReader read = myCmd.ExecuteReader())
+                {
+                    while (read.Read())
+                    {
+                        //total1.Text = (read["fldpeuniformshirt"].ToString());
+                    }
+                    read.Close();
+                    read.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
+            finally
+            {
+                myConn.Dispose();
+            }
+        }
+
+        private void cashin_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+            {
+
+                double paymentval = Double.TryParse(cashin.Text, out paymentval) ? paymentval : 0.0;
+                double totalbill_var = Double.TryParse(balance.Text, out totalbill_var) ? totalbill_var : 0.0;
+                if (paymentval < totalbill_var)
+                {
+                    MessageBox.Show("Payment is lesser than balance");
+                    change.Text = "0.00";
+                    button1.Enabled = false;
+                }
+                else
+                {
+                    change.Text = (paymentval - totalbill_var).ToString("#.##");
+                    button1.Enabled = true;
+                }
+            }
         }
     }
 }
