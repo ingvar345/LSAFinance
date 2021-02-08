@@ -18,11 +18,12 @@ namespace Billing_Module
     {
         private string plancode = "";
         private string cash1, cash2, check1, check2 = "";
-        private string amount_in_words = "";
+        private string amount_in_words = "", crnumber = "";
 
         //private string constring = "datasource=192.168.0.17;Initial Catalog=lsa_test1;port=3306;username=ing;password=123";
         private string constring = "datasource=203.177.24.82;Initial Catalog=lsa_test1;port=3306;username=ing;password=123";
         //private string constring = "datasource=localhost;Initial Catalog=lsa_test1;port=3306;username=root;password=";
+
         public Cashiering2()
         {
             InitializeComponent();
@@ -81,15 +82,15 @@ namespace Billing_Module
         void insertnewledger()
         {
             //payment plan
-            if (paymentplan.Text == "Plan A")
+            if (paymentplan.Text == "A")
             {
                 this.plancode = "A";
             }
-            else if (paymentplan.Text == "Plan B")
+            else if (paymentplan.Text == "B")
             {
                 this.plancode = "B";
             }
-            else if (paymentplan.Text == "Plan C")
+            else if (paymentplan.Text == "C")
             {
                 this.plancode = "C";
             }
@@ -119,6 +120,34 @@ namespace Billing_Module
             }
         }
 
+        void fetchorno()
+        {
+            MySqlConnection myConn = new MySqlConnection(constring);
+            MySqlCommand myCmd = new MySqlCommand("procfetchorno", myConn);
+            try
+            {
+                myConn.Open();
+                using (MySqlDataReader read = myCmd.ExecuteReader())
+                {
+                    while (read.Read())
+                    {
+                        this.crnumber = (read["fldornumber"].ToString());
+                        cr_no.Text = this.crnumber;
+                    }
+                    read.Close();
+                    read.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            finally
+            {
+                myConn.Dispose();
+            } 
+        }
+        
         void insertupdatebill()
         {
             double prevaccbal = Double.TryParse(prevacc.Text, out prevaccbal) ? prevaccbal : 0.0;
@@ -132,12 +161,7 @@ namespace Billing_Module
 
             double yrlvl = Double.TryParse(yearlvl.Text, out yrlvl) ? yrlvl : 0.0;
 
-            double kinderval = Double.TryParse(balancedue.Text, out kinderval) ? kinderval : 0.0;
-            double gradeschoolval = Double.TryParse(balancedue.Text, out gradeschoolval) ? gradeschoolval : 0.0;
-            double highschoolval = Double.TryParse(balancedue.Text, out highschoolval) ? highschoolval : 0.0;
-            double seniorhsval = Double.TryParse(balancedue.Text, out seniorhsval) ? seniorhsval : 0.0;
-            double nighthsval = Double.TryParse(balancedue.Text, out nighthsval) ? nighthsval : 0.0;
-            double othersval = Double.TryParse(balancedue.Text, out othersval) ? othersval : 0.0;
+            double kinderval = 0.0, gradeschoolval = 0.0, highschoolval = 0.0, seniorhsval = 0.0, nighthsval = 0.0, othersval = 0.0; 
             
             amount_in_words = AmountInWords(cash_in) + " Pesos only";
 
@@ -209,7 +233,7 @@ namespace Billing_Module
                 myCmd.Parameters.Add("@Ptotal1", MySqlDbType.Decimal).Value = totalbal;
                 myCmd.Parameters.Add("@Ppaymentcode", MySqlDbType.VarChar, 9).Value = this.plancode;
                 myCmd.Parameters.Add("@Ptotalbill", MySqlDbType.Decimal).Value = ptotalbill;
-                myCmd.Parameters.Add("@Pcrno", MySqlDbType.Decimal).Value = cr_no.Text;
+                myCmd.Parameters.Add("@Pcrno", MySqlDbType.Decimal).Value = this.crnumber.ToString();
 
                 myCmd.Parameters.Add("@Ptransaction", MySqlDbType.VarChar, 45).Value = transaction.ToString();
                 myCmd.Parameters.Add("@Pamountin", MySqlDbType.Decimal).Value = cash_in;
@@ -269,8 +293,8 @@ namespace Billing_Module
             TextObject bank1 = (TextObject)report.ReportDefinition.Sections["Section4"].ReportObjects["cbank1"];
             TextObject bank2 = (TextObject)report.ReportDefinition.Sections["Section4"].ReportObjects["cbank2"];
 
-            crno1.Text = cr_no.Text;
-            crno2.Text = cr_no.Text;
+            crno1.Text = this.crnumber;
+            crno2.Text = this.crnumber;
             name1.Text = name.Text;
             name2.Text = name.Text;
             idnum1.Text = idnumber.Text;
@@ -301,15 +325,15 @@ namespace Billing_Module
         void returnvalues()
         {
             string enrollmentbal;
-            if (paymentplan.Text == "Plan A")
+            if (paymentplan.Text == "A")
             {
                 this.plancode = "A";
             }
-            else if (paymentplan.Text == "Plan B")
+            else if (paymentplan.Text == "B")
             {
                 this.plancode = "B";
             }
-            else if (paymentplan.Text == "Plan C")
+            else if (paymentplan.Text == "C")
             {
                 this.plancode = "C";
             }
@@ -348,6 +372,7 @@ namespace Billing_Module
 
             finally
             {
+                myConn.Close();
                 myConn.Dispose();
             }
         }
@@ -405,22 +430,18 @@ namespace Billing_Module
 
             finally
             {
+                myConn.Close();
                 myConn.Dispose();
             }
         }
 
         void cleartxtboxes()
         {
-        //    enrollbalance.Text = "";
-        //    midyearbalance.Text = "";
-        //    monthlybalance.Text = "";
             total1.Text = "";
             totalbill.Text = "";
-
             cashin.Text = "";
             change.Text = "";
             rembal.Text = "";
-
         }
 
         void searchname()
@@ -450,6 +471,7 @@ namespace Billing_Module
 
             finally
             {
+                myConn.Close();
                 myConn.Dispose();
             }
             searchbox.Focus();
@@ -556,6 +578,7 @@ namespace Billing_Module
 
         private void button1_Click(object sender, EventArgs e)
         {
+            fetchorno();
             insertupdatebill();
             cleartxtboxes();
         }
